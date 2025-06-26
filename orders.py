@@ -69,9 +69,22 @@ def main():
                 # Reindex to include all status columns even if they don't appear in data
                 pivot_data = pivot_data.reindex(columns=status_columns, fill_value=0)
                 
+                # Add Total column
+                pivot_data['Total'] = pivot_data.sum(axis=1)
+                
                 # Display the pivot table
                 st.subheader("Delivery Status Counts by Picked Date")
                 st.dataframe(pivot_data.style.background_gradient(cmap='Blues'), use_container_width=True)
+                
+                # Show summary statistics
+                st.subheader("Summary Statistics")
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Total Orders", pivot_data['Total'].sum())
+                with col2:
+                    st.metric("Unique Dates", len(pivot_data))
+                with col3:
+                    st.metric("Average Orders per Day", round(pivot_data['Total'].mean(), 1))
                 
                 # Show raw data
                 st.subheader("Raw Data")
