@@ -49,6 +49,25 @@ def main():
             # Get unique dates from 'Picked on'
             unique_dates = sorted(filtered_df['Picked Date'].dropna().unique())
             
+            # Date range filter
+            if len(unique_dates) > 0:
+                min_date = min(unique_dates)
+                max_date = max(unique_dates)
+                selected_dates = st.date_input(
+                    "Select Date Range",
+                    value=[min_date, max_date],
+                    min_value=min_date,
+                    max_value=max_date
+                )
+                
+                if len(selected_dates) == 2:
+                    start_date, end_date = selected_dates
+                    # Further filter by date range
+                    filtered_df = filtered_df[
+                        (filtered_df['Picked Date'] >= start_date) & 
+                        (filtered_df['Picked Date'] <= end_date)
+                    ]
+            
             # Status columns to count
             status_columns = [
                 'Assigned', 'At-Hub', 'Moving-To-Hub',
@@ -58,7 +77,14 @@ def main():
             
             # Create pivot table for counts
             try:
-                pivot_data = filtered_df.pivot_table(
+                # First get the records that will be included in the pivot table
+                pivot_records = filtered_df[
+                    filtered_df['Status'].isin(status_columns) &
+                    filtered_df['Picked Date'].notna()
+                ].copy()
+                
+                # Create the pivot table from these records
+                pivot_data = pivot_records.pivot_table(
                     index='Picked Date',
                     columns='Status',
                     values='Order Number',
@@ -86,16 +112,16 @@ def main():
                 with col3:
                     st.metric("Average Orders per Day", round(pivot_data['Total'].mean(), 1))
                 
-                # Show raw data
-                st.subheader("Raw Data")
-                st.dataframe(filtered_df, use_container_width=True)
+                # Show only the records that are included in the pivot table
+                st.subheader("Records Included in Pivot Table")
+                st.dataframe(pivot_records, use_container_width=True)
                 
-                # Download button for filtered data
-                csv = filtered_df.to_csv(index=False).encode('utf-8')
+                # Download button for pivot records data
+                csv = pivot_records.to_csv(index=False).encode('utf-8')
                 st.download_button(
-                    label="Download Filtered Data as CSV",
+                    label="Download Pivot Records Data as CSV",
                     data=csv,
-                    file_name='filtered_delivery_data.csv',
+                    file_name='pivot_records_data.csv',
                     mime='text/csv'
                 )
                 
