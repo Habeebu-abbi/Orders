@@ -51,8 +51,8 @@ def main():
             
             # Status columns to count
             status_columns = [
-                'Assigned', 'At-Hub', 'At-Hub-RTO', 'Moving-To-Hub',
-                'Out-For-Delivery', 'Out-For-Pickup', 'Picked', 'Returned',
+                'Assigned', 'At-Hub', 'Moving-To-Hub',
+                'Out-For-Delivery', 'Picked', 'Returned',
                 'Returned-To-Hub', 'Unable-To-Deliver'
             ]
             
