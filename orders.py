@@ -79,8 +79,8 @@ def main():
             try:
                 # First get the records that will be included in the pivot table
                 pivot_records = filtered_df[
-                    filtered_df['Status'].isin(status_columns) &
-                    filtered_df['Picked Date'].notna()
+                    (filtered_df['Status'].isin(status_columns)) &
+                    (filtered_df['Picked Date'].notna())
                 ].copy()
                 
                 # Create the pivot table from these records
@@ -98,15 +98,34 @@ def main():
                 # Add Total column
                 pivot_data['Total'] = pivot_data.sum(axis=1)
                 
-                # Display the pivot table
+                # Create a copy for display with Grand Total
+                display_data = pivot_data.copy()
+                
+                # Calculate grand totals (sum of each column)
+                grand_totals = display_data.sum().to_dict()
+                
+                # Convert index to string for display
+                display_data.index = display_data.index.astype(str)
+                
+                # Add Grand Total row
+                display_data.loc['Grand Total'] = grand_totals
+                
+                # Display the pivot table with Grand Total
                 st.subheader("Delivery Status Counts by Picked Date")
-                st.dataframe(pivot_data.style.background_gradient(cmap='Blues'), use_container_width=True)
+                
+                # Style the DataFrame - apply gradient to all rows except Grand Total
+                styled_df = display_data.style.apply(
+                    lambda x: ['background: lightblue' if x.name == 'Grand Total' else '' for i in x],
+                    axis=1
+                ).background_gradient(cmap='Blues', subset=pd.IndexSlice[display_data.index[:-1], :])
+                
+                st.dataframe(styled_df, use_container_width=True)
                 
                 # Show summary statistics
                 st.subheader("Summary Statistics")
                 col1, col2, col3 = st.columns(3)
                 with col1:
-                    st.metric("Total Orders", pivot_data['Total'].sum())
+                    st.metric("Total Orders", display_data.loc['Grand Total', 'Total'])
                 with col2:
                     st.metric("Unique Dates", len(pivot_data))
                 with col3:
